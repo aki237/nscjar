@@ -8,6 +8,7 @@ package nscjar
 import (
 	"bufio"
 	"errors"
+	"fmt"
 	"io"
 	"net/http"
 	"strconv"
@@ -20,7 +21,7 @@ type Parser struct {
 }
 
 // Marshal method is used to reform the Netscape/Mozilla's old school cookie file for the given cookie
-func (p Parser) Marshal(wr io.Writer, c http.Cookie) error {
+func (p Parser) Marshal(wr io.Writer, c *http.Cookie) error {
 	if c.Value == "" || c.Name == "" {
 		return errors.New("not a valid cookie")
 	}
@@ -31,7 +32,13 @@ func (p Parser) Marshal(wr io.Writer, c http.Cookie) error {
 		cookieLine += "#HttpOnly_"
 	}
 
-	cookieLine += c.Domain + "\tTRUE\t" + c.Path + "\t"
+	cookieLine += c.Domain + "\tTRUE\t"
+
+	if c.Path == "" {
+		c.Path = "/"
+	}
+
+	cookieLine += c.Path + "\t"
 
 	if c.Secure {
 		cookieLine += "TRUE\t"
@@ -39,7 +46,7 @@ func (p Parser) Marshal(wr io.Writer, c http.Cookie) error {
 		cookieLine += "FALSE\t"
 	}
 
-	cookieLine += strconv.FormatInt(c.Expires.Unix(), 10)
+	cookieLine += fmt.Sprintf("%d\t", c.Expires.Unix())
 
 	cookieLine += c.Name + "\t"
 
@@ -57,11 +64,11 @@ func (p Parser) Marshal(wr io.Writer, c http.Cookie) error {
 }
 
 // Unmarshal method is used to parse the contents from io.Reader and return the corresponding cookies
-func (p Parser) Unmarshal(rd io.Reader) ([]http.Cookie, error) {
+func (p Parser) Unmarshal(rd io.Reader) ([]*http.Cookie, error) {
 	b := bufio.NewReader(rd)
 	err := error(nil)
 	line := ""
-	cs := make([]http.Cookie, 0)
+	cs := make([]*http.Cookie, 0)
 	for err == nil {
 		line, err = b.ReadString('\n')
 		if err != nil && err != io.EOF {
@@ -75,7 +82,7 @@ func (p Parser) Unmarshal(rd io.Reader) ([]http.Cookie, error) {
 		if err != nil {
 			return nil, err
 		}
-		cs = append(cs, *c)
+		cs = append(cs, c)
 	}
 	if err != io.EOF {
 		return cs, err
@@ -96,7 +103,7 @@ func getCookieFromString(line string) (*http.Cookie, error) {
 
 	for _, ch := range line {
 		switch ch {
-		case '\t', ' ':
+		case '\t':
 			if inQuotes {
 				token += string(ch)
 				break
