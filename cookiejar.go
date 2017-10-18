@@ -6,7 +6,7 @@ import (
 	"net/http"
 )
 
-// CookieJar is a simple struct m=used to manage the cookies
+// CookieJar is a simple struct used to manage the cookies
 type CookieJar struct {
 	cookies []*http.Cookie
 }
