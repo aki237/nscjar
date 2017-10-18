@@ -120,35 +120,9 @@ func getCookieFromString(line string) (*http.Cookie, error) {
 
 	c := &http.Cookie{}
 	for i, val := range tokens {
-		switch i {
-		case 0:
-			c.Domain = val
-			if strings.HasPrefix("#HttpOnly_", val) {
-				c.Domain = val[10:]
-				c.HttpOnly = true
-			}
-		case 2:
-			c.Path = val
-		case 3:
-			if val == "TRUE" {
-				c.Secure = true
-				break
-			}
-			if val == "FALSE" {
-				c.Secure = false
-			} else {
-				return nil, errors.New("unexpected boolean value found for secure flag")
-			}
-		case 4:
-			timestamp, err := strconv.ParseInt(val, 10, 64)
-			if err != nil {
-				return nil, err
-			}
-			c.Expires = time.Unix(timestamp, 0)
-		case 5:
-			c.Name = val
-		case 6:
-			c.Value = val
+		err := setCookieField(i, val, c)
+		if err != nil {
+			return nil, err
 		}
 	}
 
@@ -157,4 +131,41 @@ func getCookieFromString(line string) (*http.Cookie, error) {
 	}
 
 	return c, nil
+}
+
+// setCookieField function is used to parse the val and assign it to the cookie according
+// to the index of the string. Generally used after tokenizing the cookie data line from
+// Netscape cookie data. Each ith field have to assigned to a particular struct field.
+func setCookieField(i int, val string, c *http.Cookie) error {
+	switch i {
+	case 0:
+		c.Domain = val
+		if strings.HasPrefix("#HttpOnly_", val) {
+			c.Domain = val[10:]
+			c.HttpOnly = true
+		}
+	case 2:
+		c.Path = val
+	case 3:
+		if val == "TRUE" {
+			c.Secure = true
+			break
+		}
+		if val == "FALSE" {
+			c.Secure = false
+		} else {
+			return errors.New("unexpected boolean value found for secure flag")
+		}
+	case 4:
+		timestamp, err := strconv.ParseInt(val, 10, 64)
+		if err != nil {
+			return err
+		}
+		c.Expires = time.Unix(timestamp, 0)
+	case 5:
+		c.Name = val
+	case 6:
+		c.Value = val
+	}
+	return nil
 }
