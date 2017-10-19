@@ -1,7 +1,6 @@
 package nscjar
 
 import (
-	"fmt"
 	"io"
 	"net/http"
 )
@@ -18,21 +17,21 @@ func NewCookieJar() *CookieJar {
 
 // AddCookie method is used to add a cookie to the jar
 func (j *CookieJar) AddCookie(c *http.Cookie) {
+	if c.Path == "" {
+		c.Path = "/"
+	}
 	if c == nil {
 		return
 	}
-	changed := false
+
 	for i, val := range j.cookies {
 		if val.Domain == c.Domain && val.Path == c.Path && val.Name == c.Name {
 			j.cookies[i] = c
-			fmt.Println("Cookie added : ", c)
-			changed = true
-			break
+			return
 		}
 	}
-	if !changed {
-		j.cookies = append(j.cookies, c)
-	}
+
+	j.cookies = append(j.cookies, c)
 }
 
 // AddCookies method is used to add multiple cookies to the jar at once
