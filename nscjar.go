@@ -140,7 +140,7 @@ func setCookieField(i int, val string, c *http.Cookie) error {
 	switch i {
 	case 0:
 		c.Domain = val
-		if strings.HasPrefix("#HttpOnly_", val) {
+		if strings.HasPrefix(val, "#HttpOnly_") {
 			c.Domain = val[10:]
 			c.HttpOnly = true
 		}
