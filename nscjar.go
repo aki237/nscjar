@@ -126,8 +126,8 @@ func getCookieFromString(line string) (*http.Cookie, error) {
 		}
 	}
 
-	if c.Value == "" || c.Name == "" {
-		return nil, errors.New("not a valid cookie data")
+	if c.Name == "" {
+		return nil, errors.New("cookie name is not valid")
 	}
 
 	return c, nil
